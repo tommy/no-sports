@@ -1,0 +1,6 @@
+(ns no-sports.core)
+
+(defn foo
+  "I don't do a whole lot."
+  [x]
+  (println x "Hello, World!"))
