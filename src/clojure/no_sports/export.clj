@@ -4,14 +4,14 @@
                                          statuses-user-timeline]]
             [clojure.data.csv :as csv]
             [clojure.java.io :as io]
-            [no-sports.core :refer [normalize-text
+            [no-sports.core :refer [tokenize
                                     remove-newlines]]))
 
 (def creds
-  (make-oauth-creds ""
-                    ""
-                    ""
-                    ""))
+  (make-oauth-creds "htDShW8DFBzHtsSEsxWwLFHUc"
+                    "GpYTdiAPWFod2JkmCwYoedefyjvuvoJaB5ERapbDKron5lP8RB"
+                    "191624404-T9JVGKuqkfgcChzN7YJtbjO7kcoagsAHVqDgmXFh"
+                    "tiIebSK1Sn3lbcQmDd6AMP0JUaoIvhUakL0jfB8vrFrIf"))
 
 (defn timeline
   [opts]
@@ -38,16 +38,34 @@
                      (println "\n" (:text tweet) "[y/n]")
                      (read-line))
                    (constantly ""))
-        tweets (history 100 {:max-id 528780556280946688 :count 101})
+        tweets (history 200 #_{:max-id 528780556280946688 :count 101})
         line-fn (juxt :id
                       grade-fn
-                      (comp normalize-text :text)
+                      (comp tokenize :text)
                       (comp :url first :urls :entities)
                       (comp remove-newlines :text))]
-    (with-open [out-file (io/writer "lubbockonline-grading.csv")]
+    (with-open [out-file (io/writer "lubbockonline.csv")]
       (csv/write-csv out-file
                      (map line-fn tweets)
                      :quote? (constantly true)))))
+
+(defn load-dataset
+  "Load a csv file named by the argument (default: training dataset)."
+  ([]
+   (load-dataset "training.csv"))
+  ([n]
+   (-> n io/resource io/reader csv/read-csv)))
+
+(let [indices (zipmap [:id :grade :text :url] (range))]
+  (defn el
+    "Lookup a property of the data row by keyword."
+    [k row]
+    {:pre [(contains? indices k)]}
+    (get row (indices k))))
+
+
+;;;;;;;;
+;; dev
 
 (comment
   (map :id (:body (timeline {:max-id 528780556280946688})))
