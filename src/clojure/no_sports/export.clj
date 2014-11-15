@@ -49,20 +49,6 @@
                      (map line-fn tweets)
                      :quote? (constantly true)))))
 
-(defn load-dataset
-  "Load a csv file named by the argument (default: training dataset)."
-  ([]
-   (load-dataset "training.csv"))
-  ([n]
-   (-> n io/resource io/reader csv/read-csv)))
-
-(let [indices (zipmap [:id :grade :text :url] (range))]
-  (defn el
-    "Lookup a property of the data row by keyword."
-    [k row]
-    {:pre [(contains? indices k)]}
-    (get row (indices k))))
-
 
 ;;;;;;;;
 ;; dev

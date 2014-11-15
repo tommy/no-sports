@@ -1,35 +1,14 @@
 (ns no-sports.classification
-  (:require [no-sports.export :refer [load-dataset
-                                      el]]
-            ;[clojure.data.csv :as csv]
-            [clojure.java.io :as io]
-            [clojure.string :as s]
+  (:require [no-sports.data :refer [load-dataset
+                                    el
+                                    to-map
+                                    all-tokens
+                                    token-set]]
             [task.core :as t]
             [nuroko.lab.core :as nk]
             [nuroko.gui.visual :as nkv])
   (:import [no_sports.coders.SetCoder])
   (:import [mikera.vectorz Op Ops]))
-
-(defn- token-set
-  "Given a row from the dataset, returns a set of all tokens of the tweet text."
-  [row]
-  (as-> row ?
-    (if (coll? ?) (el :text ?) ?)
-    (s/split ? #"\s+")
-    (into #{} ?)))
-
-(defn- all-tokens
-  "Returns a set of all tokens in the entire dataset"
-  [dataset]
-  (reduce
-    (fn [acc row] (into acc (token-set row)))
-    (sorted-set)
-    dataset))
-
-#_(defn- token-coder
-  [dataset]
-  (let [all (all-tokens dataset)]
-    (nk/class-coder :values all)))
 
 (defn- token-set-coder
   [dataset]
@@ -61,14 +40,10 @@
       (for [[_ grade tokens _ _] dataset
             :when (= grade (sport? net (token-set tokens)))] grade))))
 
-(def dataset-map
-  (reduce
-    (fn [acc row] (assoc acc (token-set row) (el :grade row)))
-    {}
-    dataset))
+
 
 (def task
-  (nk/mapping-task dataset-map
+  (nk/mapping-task (to-map dataset)
                    :input-coder token-coder
                    :output-coder bool-coder))
 
@@ -84,10 +59,15 @@
             :title "number correct classifications")
 
   (t/run {:sleep 1 :repeat 1000} (trainer net))
-
-  (sport? net (token-set (first dataset)))
-  (map (comp (partial sport? net) token-set) dataset)
   (evaluate-scores net dataset)
+
+  (t/stop-all)
+  (do
+    (t/run {:repeat 1000} (trainer net))
+    (Thread/sleep 1000)
+    (evaluate-scores net dataset))
+
+  (map (comp (partial sport? net) token-set) dataset)
   (def d (load-dataset))
   (def c (token-set-coder d))
   (def v (nk/encode c #{"abernathy" "homeless"}))
