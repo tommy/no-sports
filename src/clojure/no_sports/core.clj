@@ -22,4 +22,5 @@
   (remove-urls "this is a test http://t.co/asdf")
   (tokenize "this is a test http://t.co/asdf")
   (tokenize "as,df  ff\nbb")
+  (tokenize "this is &amp; an ampersand")
   (remove-newlines "as,df  ff\nbb"))
