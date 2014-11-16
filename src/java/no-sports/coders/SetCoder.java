@@ -57,8 +57,8 @@ public class SetCoder<T> extends AbstractCoder<Collection<T>> {
     dest.fillRange(offset, length, 0.0);
     for (T object : objects) {
       Integer i=choiceMap.get(object);
-      if (i==null) throw new NurokoException("Choice value not found: "+object);
-      dest.set(offset+i,1.0);
+      if (i != null)
+        dest.set(offset+i,1.0);
     }
 	}
 
