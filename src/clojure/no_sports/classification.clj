@@ -101,8 +101,8 @@
     @promise
     (eval-fn grading))
 
-  (let [{:keys [net coder]} (trained-net training)]
-    (graph net coder training grading (load-data "all.csv")))
+  (let [{:keys [net coder]} (trained-net (load-data "all.csv"))]
+    (graph net coder training grading (load-data "third.csv")))
 
   (t/run {:sleep 1 :repeat 1000} (trainer net))
   (evaluate net dataset)

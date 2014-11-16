@@ -4,6 +4,7 @@
                                          statuses-user-timeline]]
             [clojure.data.csv :as csv]
             [clojure.java.io :as io]
+            [clojure.string :refer [join]]
             [no-sports.core :refer [tokenize
                                     remove-newlines]]))
 
@@ -38,10 +39,10 @@
                      (println "\n" (:text tweet) "[y/n]")
                      (read-line))
                    (constantly ""))
-        tweets (history 200 #_{:max-id 528780556280946688 :count 101})
+        tweets (history 200 {:max-id 526093035797364736 :count 101})
         line-fn (juxt :id
                       grade-fn
-                      (comp tokenize :text)
+                      (comp (partial join " ") tokenize :text)
                       (comp :url first :urls :entities)
                       (comp remove-newlines :text))]
     (with-open [out-file (io/writer "lubbockonline.csv")]
