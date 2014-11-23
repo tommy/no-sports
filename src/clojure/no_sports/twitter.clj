@@ -4,41 +4,45 @@
             [oauth.client :as oauth]
             [twitter.oauth :refer [make-oauth-creds]]
             [twitter.api.restful :refer [users-show
-                                         statuses-user-timeline]]))
+                                         statuses-user-timeline]]
+            [twitter.api.streaming :refer [user-stream]])
+  (:import twitter.callbacks.protocols.AsyncStreamingCallback))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; OAuth and Cred management
 
 (defn- creds-from-config
-  [config]
+  [user config]
   (apply make-oauth-creds
     ((juxt :app-consumer-key
            :app-consumer-secret
-           :nosportsaj-token
-           :nosportsaj-secret)
+           #(get-in % [user :token])
+           #(get-in % [user :secret]))
      config)))
 
 (def ^:private creds
   (let [secrets (edn/read-string (slurp "secrets.edn"))]
-    (creds-from-config secrets)))
+    (creds-from-config :nosportsaj secrets)))
 
 (comment
   ;; Use these calls to generate new user access tokens
-  (def consumer (oauth/make-consumer
-                  (:app-consumer-key secrets)
-                  (:app-consumer-secret secrets)
-                  "https://api.twitter.com/oauth/request_token"
-                  "https://api.twitter.com/oauth/access_token"
-                  "https://api.twitter.com/oauth/authorize"
-                  :hmac-sha1))
+  (let [secrets (edn/read-string (slurp "secrets.edn"))]
+    (creds-from-config :nosportsaj secrets)
+    (def consumer (oauth/make-consumer
+                    (:app-consumer-key secrets)
+                    (:app-consumer-secret secrets)
+                    "https://api.twitter.com/oauth/request_token"
+                    "https://api.twitter.com/oauth/access_token"
+                    "https://api.twitter.com/oauth/authorize"
+                    :hmac-sha1)))
 
   (do (def request-token (oauth/request-token consumer)) request-token)
   (oauth/user-approval-uri consumer (:oauth_token request-token))
-  (oauth/access-token consumer request-token "7121424"))
+  (oauth/access-token consumer request-token "4055778"))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; reading @lubbockonline's timeline
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; reading @lubbockonline's timeline (non-streaming)
 
 (defn- timeline*
   "Fetches a single page of tweets from a user's timeline."
@@ -63,6 +67,14 @@
         (recur (into tweets (:body page))
                {:max-id (max (map :id (:body page)))})
         tweets))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; streaming feed for @lubbockonline
+
+(defn listen!
+  [callback]
+  (user-stream :oauth-creds creds))
 
 
 ;;;;;;;;
