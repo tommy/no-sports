@@ -1,4 +1,5 @@
 (ns no-sports.classification
+  "This namespace trains a classification model."
   (:require [no-sports.data :refer [load-data
                                     el
                                     to-map
@@ -11,12 +12,15 @@
   (:import [mikera.vectorz Op Ops]))
 
 (defn- token-set-coder
+  "Creates a coder that encodes/decodes sets of tokens. Only tokens that appear
+  in the original dataset (passed to this function) can be encoded.
+  Unrecognized tokens are ignored."
   [dataset]
   (let [all (all-tokens dataset)]
     (no_sports.coders.SetCoder.
       ^java.util.Collection (into [] all))))
 
-(def bool-coder (nk/class-coder :values #{"y" "n"}))
+(def ^:private bool-coder (nk/class-coder :values #{"y" "n"}))
 
 (defn- sport?
   [net coder tokens]
@@ -26,22 +30,34 @@
        (nk/think net)
        (nk/decode bool-coder)))
 
-(defn evaluate
+(defn- evaluate
   "Evaluate the performance of a trained net against a particular
   dataset."
   [net coder dataset]
   {:pre [(map? dataset)]}
-  (let [net (.clone net)]
-    (/
-     (count
-       (for [[tokens grade] dataset
-             :when (= grade (sport? net coder tokens))] grade))
-     (count dataset))))
+  (let [net (.clone net)
+        correct (for [[tokens grade] dataset
+                      :when (= grade (sport? net coder tokens))] grade)]
+    (/ (count correct)
+       (count dataset))))
 
 (defn trained-net
-  "Returns a promise that delivers a neural net when it finishes
-  training on the given dataset."
+  "Trains a neural network based on the given dataset.
+  Returns:
+
+  {
+        :net -- the neural network
+      :coder -- the token-set-coder for this dataset
+    :eval-fn -- a function that takes a grading dataset
+                and scores the trained network on it
+       :pred -- a predicate function that returns true if
+                the argument is about sports
+    :promise -- a promise that is delivered when training completes
+  }"
   [dataset]
+  {:pre [(map? dataset)
+         (every? set? (keys dataset))
+         (every? #{"y" "n"} (vals dataset))]}
   (let [net (nk/neural-network :inputs (count (all-tokens dataset))
                                :outputs 2
                                :hidden-op Ops/LOGISTIC
@@ -60,7 +76,8 @@
      :pred (partial sport? net coder)
      :promise (:promise executable)}))
 
-(defn graph
+(defn- graph
+  "Display a graph of the performance of a neural net as it is being trained."
   [net coder & gradings]
   {:pre [(seq gradings)
          (every? map? gradings)]}
@@ -106,11 +123,6 @@
 
   (t/run {:sleep 1 :repeat 1000} (trainer net))
   (evaluate net dataset)
-
-  (def a (atom 0))
-  (deref a)
-  (t/run {:while (constantly false)} (swap! a inc))
-  (t/run {:repeat 100 :while (constantly false)} (swap! a inc))
 
   (t/stop-all)
   (do
