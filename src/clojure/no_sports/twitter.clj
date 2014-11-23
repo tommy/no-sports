@@ -1,11 +1,13 @@
 (ns no-sports.twitter
   "Namespace containing twitter operations."
   (:require [clojure.tools.reader.edn :as edn]
+            [clojure.data.json :as json]
             [oauth.client :as oauth]
             [twitter.oauth :refer [make-oauth-creds]]
             [twitter.api.restful :refer [users-show
                                          statuses-user-timeline]]
-            [twitter.api.streaming :refer [user-stream]])
+            [twitter.api.streaming :refer [user-stream]]
+            [twitter.callbacks.handlers :as handlers])
   (:import twitter.callbacks.protocols.AsyncStreamingCallback))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -20,9 +22,8 @@
            #(get-in % [user :secret]))
      config)))
 
-(def ^:private creds
-  (let [secrets (edn/read-string (slurp "secrets.edn"))]
-    (creds-from-config :nosportsaj secrets)))
+(def ^:private secrets (edn/read-string (slurp "secrets.edn")))
+(def ^:private creds (creds-from-config :nosportsaj secrets))
 
 (comment
   ;; Use these calls to generate new user access tokens
@@ -72,9 +73,22 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; streaming feed for @lubbockonline
 
-(defn listen!
+#_(defn listen!
   [callback]
   (user-stream :oauth-creds creds))
+
+(defn listen!
+  [an-atom]
+  (let [push-part #(swap! an-atom update-in [:part] conj %)
+        push-failure #(swap! an-atom update-in [:failure] conj %)
+        callback (AsyncStreamingCallback. (comp push-part second vector)
+                                          (comp push-failure handlers/response-return-everything)
+                                          #_(comp println handlers/response-return-everything)
+                                          handlers/exception-print)]
+    (twitter.api.streaming/statuses-filter
+      :params {:track "Beyonce"}
+      :oauth-creds creds
+      :callbacks callback)))
 
 
 ;;;;;;;;
