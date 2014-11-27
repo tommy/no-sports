@@ -1,6 +1,9 @@
 (ns no-sports.util
   (:require [clojure.string :as s]
-            [clj-tokenizer.core :as tok]))
+            [clj-tokenizer.core :as tok])
+  (:import [java.io InputStreamReader
+                    PipedInputStream
+                    PipedOutputStream]))
 
 (defn- remove-urls
   [text]
@@ -16,6 +19,12 @@
         tok/stemmed
         tok/token-stream-without-stopwords
         remove-urls))
+
+(defn new-pipe
+  []
+  (let [output (PipedOutputStream.)
+        input (InputStreamReader. (PipedInputStream. output))]
+    [input output]))
 
 (comment
   (tokenize "don't turn apsotrophe's into space's 10 to 20")

@@ -1,7 +1,9 @@
 (ns no-sports.twitter
   "Namespace containing twitter operations."
-  (:require [clojure.tools.reader.edn :as edn]
-            [clojure.data.json :as json]
+  (:require [clojure.pprint :refer [pprint]])
+  (:require [no-sports.util :refer [new-pipe]]
+            [clojure.tools.reader.edn :as edn]
+            [cheshire.core :as json]
             [oauth.client :as oauth]
             [twitter.oauth :refer [make-oauth-creds]]
             [twitter.api.restful :refer [users-show
@@ -78,23 +80,55 @@
   (user-stream :oauth-creds creds))
 
 (defn listen!
-  [an-atom]
-  (let [push-part #(swap! an-atom update-in [:part] conj %)
-        push-failure #(swap! an-atom update-in [:failure] conj %)
-        callback (AsyncStreamingCallback. (comp push-part second vector)
-                                          (comp push-failure handlers/response-return-everything)
-                                          #_(comp println handlers/response-return-everything)
-                                          handlers/exception-print)]
-    (twitter.api.streaming/statuses-filter
-      :params {:track "Beyonce"}
-      :oauth-creds creds
-      :callbacks callback)))
+  []
+  (let [[input output] (new-pipe)
+        write-to-pipe (comp #(.write output (.getBytes %)) str second vector)
+        callback (AsyncStreamingCallback. write-to-pipe
+                                          (comp println handlers/response-return-everything)
+                                          handlers/exception-print)
+        stream (twitter.api.streaming/statuses-filter
+                 :params {:track "Beyonce" :delimited true}
+                 :oauth-creds creds
+                 :callbacks callback)
+        cancel #(do ((:cancel (meta stream)))
+                    (.close output))]
+
+    (future (do (Thread/sleep 10000)
+                (cancel)))
+    (json/parsed-seq input)))
 
 
 ;;;;;;;;
 ;; dev
 
+(defn spit-pp
+  "Pretty print the given data structure to a file."
+  [f data]
+  (spit f (with-out-str (pprint data))))
+
 (comment
+
+  (let [output (java.io.PipedOutputStream.)
+        input (java.io.BufferedReader. (java.io.InputStreamReader. (java.io.PipedInputStream. output)))]
+    (future (do (.write output (.getBytes "hihihi\n"))))
+    (future (do (println (.readLine input)))))
+
+  (do (def res (atom {}))
+      (let [ctrl (listen! res)]
+        (Thread/sleep 10000)
+        ((:cancel (meta ctrl)))))
+  (->> res deref :part (map #(-> % :body deref str json/read-json :id)) (into #{}))
+  (let [s (->> res deref :part (map str) reverse (clojure.string/join ""))]
+       (pprint (json/parsed-seq (java.io.StringReader. s))))
+
+  (let [x (->> res deref :part (map #(-> % :body deref str)) reverse)]
+    (count x)
+    (count (into #{} x)))
+
+  (spit-pp "/tmp/part.edn"
+    (->> res deref :part (map str) #_(map #(-> % :body deref str)) reverse))
+
+
   (twitter.api.restful/friends-list :oauth-creds creds)
   (map :text (timeline 10 {:count 10}))
   (clojure.pprint/pprint (timeline 10))

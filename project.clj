@@ -7,6 +7,7 @@
                  [twitter-api "0.7.7"]
                  [clj-oauth "1.5.1"]
                  [org.clojure/data.csv "0.1.2"]
+                 [cheshire "5.3.1"]
                  [clj-tokenizer "0.1.0"]
                  [com.nuroko/nurokit "0.0.3"]
                  [com.nuroko/nurokore "0.0.6"]
