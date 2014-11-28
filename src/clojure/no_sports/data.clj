@@ -14,9 +14,9 @@
 (defn tokens
   [text]
   {:pre [(string? text)]}
-  (as-> text ?
-    (s/split ? #"\s+")
-    (into #{} ?)))
+  (-> text
+    (s/split #"\s+")
+    set))
 
 (defn token-set
   "Given a row from the dataset, returns a set of all tokens of the tweet text."

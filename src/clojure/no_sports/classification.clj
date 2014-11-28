@@ -18,7 +18,7 @@
   [dataset]
   (let [all (all-tokens dataset)]
     (no_sports.coders.SetCoder.
-      ^java.util.Collection (into [] all))))
+      ^java.util.Collection (vec all))))
 
 (def ^:private bool-coder (nk/class-coder :values #{"y" "n"}))
 

@@ -1,8 +1,9 @@
 (ns no-sports.twitter
   "Namespace containing twitter operations."
   (:require [clojure.pprint :refer [pprint]])
-  (:require [no-sports.util :refer [new-pipe]]
+  (:require [no-sports.util :refer [parse-json]]
             [clojure.tools.reader.edn :as edn]
+            [clojure.core.async :refer [go-loop <! >!! chan close!]]
             [cheshire.core :as json]
             [oauth.client :as oauth]
             [twitter.oauth :refer [make-oauth-creds]]
@@ -75,15 +76,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; streaming feed for @lubbockonline
 
-#_(defn listen!
-  [callback]
-  (user-stream :oauth-creds creds))
-
 (defn listen!
-  []
-  (let [[input output] (new-pipe)
-        write-to-pipe (comp #(.write output (.getBytes %)) str second vector)
-        callback (AsyncStreamingCallback. write-to-pipe
+  "Open a streaming connection and return the parsed tweets on a channel."
+  [& {:keys [timeout]
+      :or {timeout 10000}}]
+  (let [ch (chan 10)
+        write (comp #(>!! ch %) str second vector)
+        callback (AsyncStreamingCallback. write
                                           (comp println handlers/response-return-everything)
                                           handlers/exception-print)
         stream (twitter.api.streaming/statuses-filter
@@ -91,11 +90,10 @@
                  :oauth-creds creds
                  :callbacks callback)
         cancel #(do ((:cancel (meta stream)))
-                    (.close output))]
-
-    (future (do (Thread/sleep 10000)
+                    (close! ch))]
+    (future (do (Thread/sleep timeout)
                 (cancel)))
-    (json/parsed-seq input)))
+    (parse-json ch)))
 
 
 ;;;;;;;;
@@ -106,24 +104,32 @@
   [f data]
   (spit f (with-out-str (pprint data))))
 
+(defn print-tweets
+  "Read tweets from a channel and print the text."
+  [ch]
+  (go-loop []
+    (when-let [v (<! ch)]
+      (println (:text v))
+      (recur))))
+
 (comment
 
   (let [output (java.io.PipedOutputStream.)
         input (java.io.BufferedReader. (java.io.InputStreamReader. (java.io.PipedInputStream. output)))]
-    (future (do (.write output (.getBytes "hihihi\n"))))
-    (future (do (println (.readLine input)))))
+    (future (.write output (.getBytes "hihihi\n")))
+    (future (println (.readLine input))))
 
   (do (def res (atom {}))
       (let [ctrl (listen! res)]
         (Thread/sleep 10000)
         ((:cancel (meta ctrl)))))
-  (->> res deref :part (map #(-> % :body deref str json/read-json :id)) (into #{}))
+  (->> res deref :part (map #(-> % :body deref str json/read-json :id)) set)
   (let [s (->> res deref :part (map str) reverse (clojure.string/join ""))]
        (pprint (json/parsed-seq (java.io.StringReader. s))))
 
   (let [x (->> res deref :part (map #(-> % :body deref str)) reverse)]
     (count x)
-    (count (into #{} x)))
+    (count (set x)))
 
   (spit-pp "/tmp/part.edn"
     (->> res deref :part (map str) #_(map #(-> % :body deref str)) reverse))
