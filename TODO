@@ -1,0 +1,4 @@
+* Reconnect stream on close
+* Add classifier into transducer in core.clj
+* Figure out how to deploy
+* ?? Write a "backfill" type of operation?

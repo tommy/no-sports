@@ -3,12 +3,13 @@
   (:require [clojure.pprint :refer [pprint]])
   (:require [no-sports.util :refer [parse-json]]
             [clojure.tools.reader.edn :as edn]
-            [clojure.core.async :refer [go-loop <! >!! chan close!]]
+            [clojure.core.async :as async :refer [go <! >!! chan close!]]
             [cheshire.core :as json]
             [oauth.client :as oauth]
             [twitter.oauth :refer [make-oauth-creds]]
             [twitter.api.restful :refer [users-show
-                                         statuses-user-timeline]]
+                                         statuses-user-timeline
+                                         statuses-retweet-id]]
             [twitter.api.streaming :refer [user-stream]]
             [twitter.callbacks.handlers :as handlers])
   (:import twitter.callbacks.protocols.AsyncStreamingCallback))
@@ -78,22 +79,65 @@
 
 (defn listen!
   "Open a streaming connection and return the parsed tweets on a channel."
-  [& {:keys [timeout]
-      :or {timeout 10000}}]
-  (let [ch (chan 10)
+  [& {:keys [timeout buffer]
+      :or {timeout 10000
+           buffer 10}}]
+  (let [ch (chan buffer)
         write (comp #(>!! ch %) str second vector)
+        ex-handler (fn [_ throwable]
+                     (println throwable)
+                     (close! ch))
         callback (AsyncStreamingCallback. write
                                           (comp println handlers/response-return-everything)
-                                          handlers/exception-print)
-        stream (twitter.api.streaming/statuses-filter
-                 :params {:track "Beyonce" :delimited true}
-                 :oauth-creds creds
-                 :callbacks callback)
+                                          ex-handler)
+        stream (user-stream :oauth-creds creds :callbacks callback)
+
         cancel #(do ((:cancel (meta stream)))
-                    (close! ch))]
-    (future (do (Thread/sleep timeout)
-                (cancel)))
+                    (close! ch))
+
+        _ (when timeout
+            (go (<! (async/timeout timeout))
+                (cancel)))]
+    
     (parse-json ch)))
+
+(comment
+  (twitter.api.streaming/statuses-filter
+    :params {:track "Beyonce" :delimited true}
+    :oauth-creds creds
+    :callbacks callback))
+
+;;;;;;;;;;;;;
+;; retweeting
+
+(defn retweet-id
+  [id]
+  (statuses-retweet-id :oauth-creds creds
+                       :params {:id id}))
+
+(def retweet (comp retweet-id :id))
+
+(comment
+  (retweet-id 488530656759009282))
+
+
+;;;;;;;;;;;;;;;;;;;
+;; tweet inspectors
+
+(def retweet? :retweeted_status)
+(def tweeter (comp :screen_name :user))
+(defn tweet?
+  [m]
+  (and (contains? m :id)
+       (contains? m :text)))
+
+(defn tweeter=
+  "Create a predicate that returns true when the author
+  is equal to this parameter."
+  [author]
+  #(-> %
+       tweeter
+       (= author)))
 
 
 ;;;;;;;;
@@ -107,7 +151,7 @@
 (defn print-tweets
   "Read tweets from a channel and print the text."
   [ch]
-  (go-loop []
+  (async/go-loop []
     (when-let [v (<! ch)]
       (println (:text v))
       (recur))))

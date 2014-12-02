@@ -1,6 +1,6 @@
 (ns no-sports.util
   (:require [clojure.string :as s]
-            [clojure.core.async :refer [<! >! go-loop chan close!]]
+            [clojure.core.async :as async :refer [<! >! go-loop chan close!]]
             [cheshire.core :as json]
             [clj-tokenizer.core :as tok])
   (:import com.fasterxml.jackson.core.JsonParseException))
@@ -41,6 +41,17 @@
           (recur (str acc v)))
         (close! out)))
     out))
+
+(defn pipe
+  "Create a return a new channel that will receive all messages
+  from the from channel but allows specifying a transformer.
+  
+  Example:
+  (pipe (listen!) 10 (filter retweet?))"
+  [from & opts]
+  (let [to (apply chan opts)]
+    (async/pipe from to)
+    to))
 
 (comment
   (tokenize "don't turn apsotrophe's into space's 10 to 20")

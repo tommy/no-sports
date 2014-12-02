@@ -3,7 +3,7 @@
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.6.0"]
+  :dependencies [[org.clojure/clojure "1.7.0-alpha1"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [twitter-api "0.7.7"]
                  [clj-oauth "1.5.1"]
@@ -13,6 +13,8 @@
                  [com.nuroko/nurokit "0.0.3"]
                  [com.nuroko/nurokore "0.0.6"]
                  [net.mikera/vectorz "0.13.1"]]
+
+  :main no-sports.core
   
   :source-paths ["src/clojure"]
   :java-source-paths ["src/java"])
