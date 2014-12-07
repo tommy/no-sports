@@ -12,9 +12,14 @@
                  [clj-tokenizer "0.1.0"]
                  [com.nuroko/nurokit "0.0.3"]
                  [com.nuroko/nurokore "0.0.6"]
-                 [net.mikera/vectorz "0.13.1"]]
+                 [net.mikera/vectorz "0.13.1"]
+                 [org.slf4j/slf4j-simple "1.7.7"]]
 
   :main no-sports.core
-  
+
+  :profiles {:uberjar {:aot :all}}
+  :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:unchecked"]
+  :global-vars {*warn-on-reflection* true}
+
   :source-paths ["src/clojure"]
   :java-source-paths ["src/java"])

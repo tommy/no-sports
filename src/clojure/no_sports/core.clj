@@ -5,7 +5,8 @@
             [no-sports.classification :refer [trained-net]]
             [no-sports.twitter :refer [listen!
                                        retweet retweet?
-                                       tweet? tweeter=]]))
+                                       tweet? tweeter=]])
+  (:gen-class))
 
 (defonce sport?
   (let [{:keys [promise pred]}
