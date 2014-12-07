@@ -1,16 +1,28 @@
 (ns no-sports.core
   (:require [clojure.core.async :as async :refer [<! <!! go go-loop chan]]
             [no-sports.util :refer [pipe tap]]
+            [no-sports.data :refer [load-data]]
+            [no-sports.classification :refer [trained-net]]
             [no-sports.twitter :refer [listen!
                                        retweet retweet?
                                        tweet? tweeter=]]))
+
+(defonce sport?
+  (let [{:keys [promise pred]}
+        (trained-net (load-data "all.csv"))]
+    (println "Training neural net...")
+    (deref promise)
+    (println "Done.")
+    pred))
 
 (def rt-xform
   (comp (filter tweet?)
         (tap "Got a tweet: %s" :text)
         (remove retweet?)
         (filter (tweeter= "lubbockonline"))
-        (tap "Was from @lubbockonline")
+        (tap "Was from @lubbockonline.")
+        (filter sport?)
+        (tap "Is not about sports.")
         (map retweet)))
 
 (defn -main

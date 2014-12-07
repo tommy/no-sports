@@ -1,8 +1,6 @@
 (ns no-sports.classification
   "This namespace trains a classification model."
   (:require [no-sports.data :refer [load-data
-                                    el
-                                    to-map
                                     all-tokens
                                     token-set]]
             [task.core :as t]
@@ -75,6 +73,10 @@
      :eval-fn (partial evaluate net coder)
      :pred (partial sport? net coder)
      :promise (:promise executable)}))
+
+
+;;;;;;
+;; DEV
 
 (defn- graph
   "Display a graph of the performance of a neural net as it is being trained."
