@@ -45,13 +45,36 @@
 (defn pipe
   "Create a return a new channel that will receive all messages
   from the from channel but allows specifying a transformer.
-  
+
   Example:
   (pipe (listen!) 10 (filter retweet?))"
   [from & opts]
   (let [to (apply chan opts)]
     (async/pipe from to)
     to))
+
+(defn- gets
+  [m k]
+  (if (coll? k)
+    (get-in m k)
+    (get m k)))
+
+(defn- select
+  [m ks]
+  (map (partial gets m) ks))
+
+(defn tap
+  "Create a transducer that prints the value of the supplied key
+  but does not transform the input."
+  [fmt & ks]
+  (fn [xf]
+    (fn
+      ([] (xf))
+      ([result] (xf result))
+      ([result input]
+       (println (apply format fmt (select input ks)))
+       (xf result input)))))
+
 
 (comment
   (tokenize "don't turn apsotrophe's into space's 10 to 20")

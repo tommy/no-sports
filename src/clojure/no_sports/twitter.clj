@@ -98,7 +98,7 @@
         _ (when timeout
             (go (<! (async/timeout timeout))
                 (cancel)))]
-    
+
     (parse-json ch)))
 
 (comment
