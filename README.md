@@ -1,14 +1,14 @@
 # no-sports
 
-A Clojure library designed to ... well, that part is up to you.
+A Twitter bot that retweets articles from @lubbockonline that
+aren't about sports.
 
 ## Usage
 
-FIXME
+  lein run
 
-## License
+To deploy, make sure you have the `secrets.edn` file and run
 
-Copyright © 2014 FIXME
+   lein uberjar
+   ./deploy.sh
 
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
