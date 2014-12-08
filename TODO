@@ -1,4 +1,2 @@
-* Reconnect stream on close
-* Add classifier into transducer in core.clj
-* Figure out how to deploy
+* BUG: not tokenizing from stream before checking sport?
 * ?? Write a "backfill" type of operation?
