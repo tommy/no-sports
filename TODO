@@ -1,2 +1,2 @@
-* BUG: not tokenizing from stream before checking sport?
+* BUG: timeouts when retweeting status should retry
 * ?? Write a "backfill" type of operation?
