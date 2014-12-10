@@ -5,8 +5,8 @@
             [clojure.java.io :as io]
             [clojure.string :refer [join]]
             [no-sports.twitter :refer :all]
-            [no-sports.util :refer [tokenize
-                                    remove-newlines]]))
+            [no-sports.util :refer [remove-newlines]]))
+
 (defn- grade-fn
   [manual]
   (if manual
@@ -24,9 +24,8 @@
   (let [tweets (timeline 200 {:max-id max-id :count n})
         line-fn (juxt :id
                       (grade-fn manual)
-                      (comp (partial join " ") tokenize :text)
-                      (comp :expanded_url first :urls :entities)
-                      (comp remove-newlines :text))]
+                      (comp remove-newlines :text)
+                      (comp :expanded_url first :urls :entities))]
     (with-open [out-file (io/writer out-file)]
       (csv/write-csv out-file
                      (map line-fn tweets)

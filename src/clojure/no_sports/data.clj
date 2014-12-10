@@ -1,56 +1,41 @@
 (ns no-sports.data
-  (:require [clojure.string :as s]
+  (:require [no-sports.util :refer [tokenize]]
+            [clojure.string :as s]
             [clojure.data.csv :as csv]
-            [clojure.java.io :as io]
-            [clj-tokenizer.core :as tok]))
+            [clojure.java.io :as io]))
 
 (let [indices (zipmap [:id :grade :text :url] (range))]
-  (defn el
+  (defn- el
     "Lookup a property of the data row by keyword."
     [k row]
     {:pre [(contains? indices k)]}
     (get row (indices k))))
-
-(defn tokens
-  [text]
-  {:pre [(string? text)]}
-  (-> text
-    (s/split #"\s+")
-    set))
-
-(defn token-set
-  "Given a row from the dataset, returns a set of all tokens of the tweet text."
-  [row]
-  {:pre [(vector? row)
-         (#{2 5} (count row))]}
-  (case (count row)
-    5 (tokens (el :text row))
-    2 (key row)))
 
 (defn all-tokens
   "Returns a set of all tokens in the entire dataset"
   ([a b & ds]
    (apply into (map all-tokens (conj ds a b))))
   ([dataset]
-   {:pre [(or
-            (and (sequential? dataset) (sequential? (first dataset)))
-            (and (map? dataset) (set? (key (first dataset)))))]}
+   {:pre [(and (map? dataset) (string? (key (first dataset))))]}
    (reduce
-     (fn [acc row] (into acc (token-set row)))
+     (fn [acc text] (into acc (tokenize text)))
      (sorted-set)
-     dataset)))
+     (keys dataset))))
 
-(defn load-dataset
+(defn- load-dataset
   "Load a csv file named by the argument (default: training dataset)."
   ([]
    (load-dataset "training.csv"))
   ([n]
    (-> n io/resource io/reader csv/read-csv)))
 
-(defn to-map
+(defn- to-map
+  "Convert the tabular dataset into a map, where the key is the set of
+  (stemmed) tokens in the tweet text, and the value is the grade."
   [dataset]
+  {:pre [(every? #{4} (map count dataset))]}
   (reduce
-    (fn [acc row] (assoc acc (token-set row) (el :grade row)))
+    (fn [acc row] (assoc acc (el :text row) (el :grade row)))
     {}
     dataset))
 
@@ -59,8 +44,15 @@
   (to-map (apply load-dataset args)))
 
 
+;;;;;;;;;;;
+;; repl dev
+
 (comment
-  (count (all-tokens (load-data "training.csv")))
-  (count (all-tokens (load-data "grading.csv")))
-  (count (apply all-tokens (map load-data ["training.csv"
-                                           "grading.csv"]))))
+  (def t (mapv vec (load-dataset "grading.csv")))
+  (def tt (mapv #(vector (get % 0) (get % 1) (get % 4) (get % 3)) t))
+  (with-open [out-file (io/writer "resources/third.new.csv")]
+    (csv/write-csv out-file
+                   tt
+                   :quote? (constantly true)))
+
+  (def tr (load-data "training.csv")))

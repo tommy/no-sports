@@ -10,7 +10,7 @@
 
 (defonce sport?
   (let [{:keys [promise pred]}
-        (trained-net (load-data "all.csv"))]
+        (trained-net (load-data "training.csv"))]
     (println "Training neural net...")
     (deref promise)
     (println "Done.")
@@ -22,7 +22,7 @@
         (remove retweet?)
         (filter (tweeter= "lubbockonline"))
         (tap "Was from @lubbockonline.")
-        (filter sport?)
+        (filter (comp sport? :text))
         (tap "Is not about sports.")
         (map retweet)))
 

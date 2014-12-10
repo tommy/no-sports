@@ -19,7 +19,6 @@
 
   :profiles {:uberjar {:aot :all}}
   :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:unchecked"]
-  :global-vars {*warn-on-reflection* true}
 
   :source-paths ["src/clojure"]
   :java-source-paths ["src/java"])

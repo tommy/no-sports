@@ -5,6 +5,13 @@
             [clj-tokenizer.core :as tok])
   (:import com.fasterxml.jackson.core.JsonParseException))
 
+(defn mapk
+  "Map over keys in a map."
+  [f m]
+  (->> m
+       (map #(vector (f (key %)) (val %)))
+       (into {})))
+
 (defn- remove-urls
   [text]
   (s/replace text #"http://\S*" ""))
@@ -13,11 +20,16 @@
   [text]
   (s/replace text #"\n" " "))
 
-(def tokenize
-  (comp tok/token-seq
-        tok/stemmed
-        tok/token-stream-without-stopwords
-        remove-urls))
+(defn tokenize
+  [s]
+  {:pre [(string? s)]}
+  ((comp set
+         tok/token-seq
+         tok/stemmed
+         tok/token-stream-without-stopwords
+         remove-urls
+         remove-newlines)
+   s))
 
 (defn maybe-parse
   "Tries to parse a string as JSON. Returns nil instead of throwing an
@@ -64,8 +76,10 @@
   (map (partial gets m) ks))
 
 (defn tap
-  "Create a transducer that prints the value of the supplied key
-  but does not transform the input."
+  "Create a transducer that prints the values of the supplied keys
+  but does not transform the input.
+  
+  (tap \"Got tweet with id %d and body %s\" :id [:body :text])"
   [fmt & ks]
   (fn [xf]
     (fn
@@ -74,12 +88,3 @@
       ([result input]
        (println (apply format fmt (select input ks)))
        (xf result input)))))
-
-
-(comment
-  (tokenize "don't turn apsotrophe's into space's 10 to 20")
-  (remove-urls "this is a test http://t.co/asdf")
-  (tokenize "this is a test http://t.co/asdf")
-  (tokenize "as,df  ff\nbb")
-  (tokenize "this is &amp; an ampersand")
-  (remove-newlines "as,df  ff\nbb"))

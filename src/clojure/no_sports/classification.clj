@@ -1,12 +1,12 @@
 (ns no-sports.classification
   "This namespace trains a classification model."
-  (:require [no-sports.data :refer [load-data
-                                    all-tokens
-                                    token-set]]
+  (:require [no-sports.data :refer [load-data all-tokens]]
+            [no-sports.util :refer [tokenize mapk]]
             [task.core :as t]
             [nuroko.lab.core :as nk]
             [nuroko.gui.visual :as nkv])
   (:import [no_sports.coders.SetCoder])
+  (:import nuroko.module.NeuralNet)
   (:import [mikera.vectorz Op Ops]))
 
 (defn- token-set-coder
@@ -20,10 +20,11 @@
 
 (def ^:private bool-coder (nk/class-coder :values #{"y" "n"}))
 
-(defn- sport?
+(defn- pred?
   [net coder tokens]
-  {:pre [(set? tokens)]}
+  {:pre [(string? tokens)]}
   (->> tokens
+       tokenize
        (nk/encode coder)
        (nk/think net)
        (nk/decode bool-coder)))
@@ -33,9 +34,9 @@
   dataset."
   [net coder dataset]
   {:pre [(map? dataset)]}
-  (let [net (.clone net)
+  (let [net (.clone ^NeuralNet net)
         correct (for [[tokens grade] dataset
-                      :when (= grade (sport? net coder tokens))] grade)]
+                      :when (= grade (pred? net coder tokens))] grade)]
     (/ (count correct)
        (count dataset))))
 
@@ -54,7 +55,7 @@
   }"
   [dataset]
   {:pre [(map? dataset)
-         (every? set? (keys dataset))
+         (every? string? (keys dataset))
          (every? #{"y" "n"} (vals dataset))]}
   (let [net (nk/neural-network :inputs (count (all-tokens dataset))
                                :outputs 2
@@ -62,7 +63,7 @@
                                :output-op Ops/LOGISTIC
                                :hidden-sizes [20])
         coder (token-set-coder dataset)
-        task (nk/mapping-task dataset
+        task (nk/mapping-task (mapk tokenize dataset)
                               :input-coder coder
                               :output-coder bool-coder)
         trainer (nk/supervised-trainer net task :batch-size 100)
@@ -71,7 +72,7 @@
     {:net net
      :coder coder
      :eval-fn (partial evaluate net coder)
-     :pred (partial sport? net coder)
+     :pred (partial pred? net coder)
      :promise (:promise executable)}))
 
 
@@ -92,50 +93,29 @@
 ;; for repl
 
 (comment
-  (def dataset (load-data))
-  (def token-coder (token-set-coder dataset))
-  (def net
-    (nk/neural-network :inputs (count (all-tokens dataset)) 
-                       :outputs 2
-                       :hidden-op Ops/LOGISTIC
-                       :output-op Ops/LOGISTIC
-                       :hidden-sizes [20]))
-  (def task
-    (nk/mapping-task dataset
-                     :input-coder token-coder
-                     :output-coder bool-coder))
-  (def trainer (nk/supervised-trainer net task :batch-size 100)))
-
-(comment
-  (nkv/show (nkv/network-graph net :line-width 2)
-            :title "Net")
-
-  (let [{:keys [promise eval-fn]} (trained-net dataset)]
-    @promise
-    (eval-fn dataset))
+  (def d (remove #(= % (tokenize (clojure.string/join " " %)))
+                 (keys grading)))
+  (map (juxt identity #(tokenize (clojure.string/join " " %))) d)
 
   (def training (load-data "training.csv"))
   (def grading (load-data "grading.csv"))
+  (def grading-n (->> grading
+                      (filter #(= "n" (val %)))
+                      (into {})))
+  (def grading-y (->> grading
+                      (filter #(= "y" (val %)))
+                      (into {})))
   (let [{:keys [promise eval-fn]} (trained-net training)]
     @promise
-    (eval-fn grading))
+    (double (eval-fn grading-y)))
 
-  (let [{:keys [net coder]} (trained-net (load-data "all.csv"))]
-    (graph net coder training grading (load-data "third.csv")))
+  (let [{:keys [net coder]} (trained-net (load-data "training.csv"))]
+    (graph net coder training grading (load-data "grading.csv")))
 
-  (t/run {:sleep 1 :repeat 1000} (trainer net))
-  (evaluate net dataset)
+  (def net (:net (trained-net training)))
+  (nkv/show (nkv/network-graph net :line-width 2)
+            :title "Net")
 
   (t/stop-all)
-  (do
-    (t/run {:repeat 1000} (trainer net))
-    (Thread/sleep 1000)
-    (evaluate net dataset))
 
-  (map (comp (partial sport? net dataset) token-set) dataset)
-  (def d (load-dataset))
-  (def c (token-set-coder d))
-  (def v (nk/encode c #{"abernathy" "homeless"}))
-  (nk/decode c v)
-  ;(defn- d [] (nk/separate-data 0.2 (take 10 (load-dataset))))
   (nk/separate-data 0.5 [:a :b :c :d] [false true false false]))
