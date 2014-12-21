@@ -10,4 +10,14 @@
   (let [{:keys [net coder promise pred eval-fn]}
         (trained-net training-data)]
     (deref promise 5000 nil)
-    (is (<= 88/101 (eval-fn grading-data)))))
+
+    (testing "model quality"
+      (is (<= 88/101 (eval-fn grading-data))))
+
+    (testing "sanity check of returned values"
+      (is (not (nil? coder)))
+      (is (pred "Four-star S and Texas Tech target Kahlil Haughton to make commitment at 3 p.m.:
+                http://t.co/SOkssarQkJ"))
+      (is (not (pred "The Following Are The Obituaries For Sunday, December 21st, 2014
+                     In The Lubbock Avalanche Journal &amp; Lubbock Online:
+                     http://t.co/1OOCwHfPAX"))))))

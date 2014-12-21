@@ -20,14 +20,18 @@
 
 (def ^:private bool-coder (nk/class-coder :values #{"y" "n"}))
 
-(defn- pred?
+(defn- run
   [net coder tokens]
-  {:pre [(string? tokens)]}
+  {:pre [(string? tokens)]
+   :post [(#{"y" "n"} %)]}
   (->> tokens
        tokenize
        (nk/encode coder)
        (nk/think net)
        (nk/decode bool-coder)))
+
+(def ^:private pred?
+  (comp (partial = "y") run))
 
 (defn- evaluate
   "Evaluate the performance of a trained net against a particular
@@ -36,7 +40,7 @@
   {:pre [(map? dataset)]}
   (let [net (.clone ^NeuralNet net)
         correct (for [[tokens grade] dataset
-                      :when (= grade (pred? net coder tokens))] grade)]
+                      :when (= grade (run net coder tokens))] grade)]
     (/ (count correct)
        (count dataset))))
 
