@@ -55,8 +55,7 @@
   (statuses-user-timeline
     :oauth-creds creds
     :params (merge {:screen-name "lubbockonline"
-                    :count 100
-                    :trim-user true}
+                    :count 100}
                    opts)))
 
 (defn timeline
@@ -158,11 +157,6 @@
       (recur))))
 
 (comment
-
-  (let [output (java.io.PipedOutputStream.)
-        input (java.io.BufferedReader. (java.io.InputStreamReader. (java.io.PipedInputStream. output)))]
-    (future (.write output (.getBytes "hihihi\n")))
-    (future (println (.readLine input))))
 
   (do (def res (atom {}))
       (let [ctrl (listen! res)]

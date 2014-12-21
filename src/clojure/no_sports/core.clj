@@ -18,7 +18,7 @@
       (pprint failures))))
 
 (defonce sport?
-  (let [{:keys [promise pred eval-fn]}
+  (let [{:keys [promise pred]}
         (trained-net (load-data "training.csv"))]
     (println "Training neural net...")
     (deref promise)
@@ -31,9 +31,8 @@
         (remove retweet?)
         (filter (tweeter= "lubbockonline"))
         (tap "Was from @lubbockonline.")
-        (filter (comp sport? :text))
-        (tap "Is not about sports.")
-        (map retweet)))
+        (remove (comp sport? :text))
+        (tap "Is not about sports.")))
 
 (defn -main
   "Listens to the @NoSportsAJ user stream and retweets any tweets that match
@@ -47,7 +46,8 @@
     (println "Connecting to stream...")
     (loop [stream (connect)]
       (if-let [v (<!! stream)]
-        (do (println (format "Retweeting: %s" (get-in v [:body :text])))
+        (do (println (format "Retweeting: %s" (:text v)))
+            (retweet v)
             (recur stream))
         (do (println "Lost connection!!!")
             (recur (connect)))))))
