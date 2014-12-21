@@ -60,18 +60,19 @@
                    opts)))
 
 (defn timeline
-  "Fetches at least n items from a user's timeline.
+  "Fetches n tweets from a user's timeline (or all if less than n).
 
   Automatically fetchs additional pages if necessary."
   [n & [{:as opts}]]
   (loop [tweets []
          opts (or opts {})]
-    (let [page (timeline* opts)]
-      (if (and (seq (:body page))
+    (let [page (:body (timeline* opts))
+          tweets (into tweets page)]
+      (if (and (seq page)
                (< (count tweets) n))
-        (recur (into tweets (:body page))
-               {:max-id (max (map :id (:body page)))})
-        tweets))))
+        (recur tweets
+               (merge opts {:max-id (dec (reduce min (map :id page)))}))
+        (take n tweets)))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
