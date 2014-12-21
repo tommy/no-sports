@@ -1,5 +1,6 @@
 (ns no-sports.data
   (:require [no-sports.util :refer [tokenize]]
+            [clojure.tools.reader.edn :as edn]
             [clojure.string :as s]
             [clojure.data.csv :as csv]
             [clojure.java.io :as io]))
@@ -43,6 +44,9 @@
   [& args]
   (to-map (apply load-dataset args)))
 
+(defn load-edn
+  [n]
+  (-> n io/resource slurp edn/read-string))
 
 ;;;;;;;;;;;
 ;; repl dev
