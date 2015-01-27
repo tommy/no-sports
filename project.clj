@@ -13,6 +13,7 @@
                  [clj-tokenizer "0.1.0"]
                  [com.nuroko/nurokit "0.0.3"]
                  [com.nuroko/nurokore "0.0.6"]
+                 [judgr "0.3.0"]
                  [net.mikera/vectorz "0.13.1"]
                  [org.slf4j/slf4j-simple "1.7.7"]]
 

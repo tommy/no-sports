@@ -3,7 +3,8 @@
             [clojure.pprint :refer [pprint]]
             [no-sports.util :refer [pipe tap]]
             [no-sports.data :refer [load-data load-edn]]
-            [no-sports.neural :refer [trained-net]]
+            #_[no-sports.neural :refer [trained-net]]
+            [no-sports.bayes :refer [classify-pred]]
             [no-sports.twitter :refer [listen!
                                        retweet retweet?
                                        tweet? tweeter=]])
@@ -18,6 +19,10 @@
       (pprint failures))))
 
 (defonce sport?
+  (-> (load-data "training.csv")
+      (classify-pred :y)))
+
+#_(defonce sport?
   (let [{:keys [promise pred]}
         (trained-net (load-data "training.csv"))]
     (println "Training neural net...")
