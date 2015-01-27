@@ -3,7 +3,7 @@
             [clojure.pprint :refer [pprint]]
             [no-sports.util :refer [pipe tap]]
             [no-sports.data :refer [load-data load-edn]]
-            [no-sports.classification :refer [trained-net]]
+            [no-sports.neural :refer [trained-net]]
             [no-sports.twitter :refer [listen!
                                        retweet retweet?
                                        tweet? tweeter=]])

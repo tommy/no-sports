@@ -1,6 +1,6 @@
-(ns no-sports.classification-test
+(ns no-sports.neural-test
   (:require [clojure.test :refer :all]
-            [no-sports.classification :refer :all]
+            [no-sports.neural :refer :all]
             [no-sports.data :refer :all]))
 
 (def training-data (load-data "training.csv"))

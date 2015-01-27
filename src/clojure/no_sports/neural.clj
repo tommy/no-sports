@@ -1,5 +1,5 @@
-(ns no-sports.classification
-  "This namespace trains a classification model."
+(ns no-sports.neural
+  "This namespace trains a neural net classification model."
   (:require [no-sports.data :refer [load-data all-tokens]]
             [no-sports.util :refer [tokenize mapk]]
             [task.core :as t]
