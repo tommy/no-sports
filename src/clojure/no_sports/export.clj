@@ -12,9 +12,8 @@
   "Export tweets to a csv for manual grading and use in model training."
   [& {:keys [out-file page-size max-id]
       :or {out-file "resources/lubbockonline.csv"
-           max-id 526093035797364736
            page-size 101}}]
-  (let [tweets (timeline 200 {:max-id max-id :count page-size})
+  (let [tweets (timeline 200 {:count page-size})
         line-fn (juxt :id
                       (constantly "")
                       (comp remove-newlines :text)
