@@ -17,9 +17,11 @@
     classifier))
 
 (defn classify-pred
-  [dataset expected-val]
-  (let [c (classifier dataset)]
-    (fn [v] (= v (.classify c expected-val)))))
+  [dataset-or-classifier expected-val]
+  (let [c (condp = (type dataset-or-classifier)
+            DefaultClassifier dataset-or-classifier
+            (classifier dataset-or-classifier))]
+    (fn [v] (= expected-val (.classify c v)))))
 
 (comment
   (def d (load-data "training.csv"))

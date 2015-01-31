@@ -18,7 +18,7 @@
       (println "Failed verification for following tweets:")
       (pprint failures))))
 
-(defonce sport?
+(def sport?
   (-> (load-data "training.csv")
       (classify-pred :y)))
 

@@ -1,6 +1,6 @@
 (defproject no-sports "0.1.0-SNAPSHOT"
   :description "Bot that retweets @lubbockonline articles that don't have to do with sports."
-  :url "http://example.com/FIXME"
+  :url "http://twitter.com/NoSportsAJ"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.7.0-alpha1"]
