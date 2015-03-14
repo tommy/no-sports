@@ -1,9 +1,12 @@
 (ns no-sports.util
   (:require [clojure.string :as s]
             [clojure.core.async :as async :refer [<! >! go-loop chan close!]]
+            [clojure.tools.logging :refer [info debugf debug]]
             [cheshire.core :as json]
             [clj-tokenizer.core :as tok])
   (:import com.fasterxml.jackson.core.JsonParseException))
+
+;; collection utils
 
 (defn mapk
   "Map over keys in a map."
@@ -12,13 +15,26 @@
        (map #(vector (f (key %)) (val %)))
        (into {})))
 
-(defn- remove-urls
+(defn- gets
+  [m k]
+  (if (coll? k)
+    (get-in m k)
+    (get m k)))
+
+(defn- select
+  [m ks]
+  (map (partial gets m) ks))
+
+
+;; string utils
+
+(defn remove-urls
   [text]
-  (s/replace text #"http://\S*" ""))
+  (s/replace text #"https?://\S*" ""))
 
 (defn remove-newlines
   [text]
-  (s/replace text #"\n" " "))
+  (s/replace text "\n" " "))
 
 (defn tokenize
   [s]
@@ -38,21 +54,35 @@
   (try
     (json/parse-string s true)
     (catch JsonParseException e
-      nil)))
+      (debugf "Couldn't parse JSON: %s" (.getMessage e)))))
 
-(defn parse-json
-  "Read (possibly partial) JSON strings from a channel and emit the parsed data
-  structures to a returned channel."
-  [in]
-  (let [out (chan)]
-    (go-loop [acc ""]
-      (if-let [v (<! in)]
-        (if-let [parsed (maybe-parse (str acc v))]
-          (do (>! out parsed)
-              (recur ""))
-          (recur (str acc v)))
-        (close! out)))
-    out))
+(defn escaped
+  [s]
+  (let [f #(if-let [c (char-escape-string %)] c %)]
+    (reduce str (map f s))))
+
+(def whitespace?
+  (partial re-matches #"\s*"))
+
+;; channel
+
+(defn tap
+  "Create a transducer that logs the values of the supplied keys
+  but does not transform the input.
+
+  (tap \"Got tweet with id %d and body %s\" :id [:body :text])"
+  [fmt & ks]
+  (fn [xf]
+    (fn
+      ([] (xf))
+      ([result] (xf result))
+      ([result input]
+       (info (apply format fmt (select input ks)))
+       (xf result input)))))
+
+(def whitespace-filter
+  (comp (tap "tick")
+        (remove whitespace?)))
 
 (defn pipe
   "Create a return a new channel that will receive all messages
@@ -65,26 +95,21 @@
     (async/pipe from to)
     to))
 
-(defn- gets
-  [m k]
-  (if (coll? k)
-    (get-in m k)
-    (get m k)))
+(defn parse-json
+  "Read (possibly partial) JSON strings from a channel and emit the parsed data
+  structures to a returned channel."
+  [in]
+  (let [out (chan)
+        in (pipe in 10 whitespace-filter)]
+    (go-loop [acc ""]
+      (if-let [v (<! in)]
+        (do
+          (debug (format "Got a piece of json: '%s'" (escaped v)))
+          (debug (format "Accumulator holds: '%s'" (escaped acc)))
 
-(defn- select
-  [m ks]
-  (map (partial gets m) ks))
-
-(defn tap
-  "Create a transducer that prints the values of the supplied keys
-  but does not transform the input.
-
-  (tap \"Got tweet with id %d and body %s\" :id [:body :text])"
-  [fmt & ks]
-  (fn [xf]
-    (fn
-      ([] (xf))
-      ([result] (xf result))
-      ([result input]
-       (println (apply format fmt (select input ks)))
-       (xf result input)))))
+          (if-let [parsed (maybe-parse (str acc v))]
+            (do (>! out parsed)
+                (recur ""))
+            (recur (str acc v))))
+        (close! out)))
+    out))

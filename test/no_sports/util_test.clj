@@ -24,3 +24,18 @@
 
       (close! source)
       (is (nil? (<!! json))))))
+
+(deftest remove-newlines-test
+  (is (= "1 2" (remove-newlines "1\n2"))))
+
+(deftest remove-urls-test
+  (is (= "hey  there" (remove-urls "hey http://google.com there")))
+  (is (= "hey  there" (remove-urls "hey https://google.com there"))))
+
+(deftest escaped-test
+  (is (= "hey\\nthere" (escaped "hey\nthere"))))
+
+(deftest whitespace-test
+  (is (whitespace? "\r\n"))
+  (is (not (whitespace? "f\n")))
+  (is (not (whitespace? "\na"))))

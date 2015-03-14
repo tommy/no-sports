@@ -1,5 +1,6 @@
 (ns no-sports.core
   (:require [clojure.core.async :as async :refer [<! <!! go go-loop chan]]
+            [clojure.tools.logging :refer [info infof warn error]]
             [clojure.pprint :refer [pprint]]
             [no-sports.util :refer [pipe tap]]
             [no-sports.data :refer [load-data load-edn]]
@@ -14,7 +15,7 @@
   (let [failures (remove #(= (second %) (pred (first %)))
                          (load-edn "verification.edn"))]
     (when (seq failures)
-      (println "Failed verification for following tweets:")
+      (error "Failed verification for following tweets:")
       (pprint failures))))
 
 (def sport?
@@ -39,11 +40,11 @@
   []
   (verify sport?)
   (let [connect #(pipe (listen! :timeout nil) 20 rt-xform)]
-    (println "Connecting to stream...")
+    (info "Connecting to stream...")
     (loop [stream (connect)]
       (if-let [v (<!! stream)]
-        (do (println (format "Retweeting: %s" (:text v)))
+        (do (infof "Retweeting: %s" (:text v))
             (retweet v)
             (recur stream))
-        (do (println "Lost connection!!!")
+        (do (warn "Lost connection!!!")
             (recur (connect)))))))

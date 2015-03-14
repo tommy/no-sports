@@ -3,6 +3,7 @@
   (:require [clojure.pprint :refer [pprint]])
   (:require [no-sports.util :refer [parse-json]]
             [clojure.tools.reader.edn :as edn]
+            [clojure.tools.logging :refer [info error]]
             [clojure.core.async :as async :refer [go <! >!! chan close!]]
             [cheshire.core :as json]
             [oauth.client :as oauth]
@@ -85,12 +86,11 @@
   (let [ch (chan buffer)
         write (comp #(>!! ch %) str second vector)
         ex-handler (fn [_ throwable]
-                     (println "Exception handler triggered.")
-                     (println throwable)
+                     (error throwable "Exception handler triggered.")
                      (close! ch))
         failure-handler (fn [response]
-                          (println "Failure handler triggered.")
-                          (println response)
+                          (error "Failure handler triggered.")
+                          (error response)
                           (close! ch))
         callback (AsyncStreamingCallback. write failure-handler ex-handler)
         stream (user-stream :oauth-creds creds :callbacks callback)

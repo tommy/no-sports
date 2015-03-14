@@ -3,6 +3,8 @@
             [clojure.pprint :refer [pprint]]
             [clojure.java.io :as io]
             [clojure.tools.reader.edn :as edn]
+            [clojure.tools.logging :refer [*logger-factory*]]
+            [clojure.tools.logging.impl :refer [disabled-logger-factory]]
             [clojure.data :refer [diff]]
             [clojure.core.async :refer [chan <!! >!! close! alt!! go >! <!]]
             [no-sports.core :refer :all]
@@ -16,7 +18,8 @@
 
 (defmacro dont-print
   [& body]
-  `(binding [*out* (io/writer "/dev/null")]
+  `(binding [*out* (io/writer "/dev/null")
+             *logger-factory* disabled-logger-factory]
      ~@body))
 
 (deftest test-xform
