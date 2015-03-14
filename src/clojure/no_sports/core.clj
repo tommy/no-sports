@@ -3,7 +3,6 @@
             [clojure.pprint :refer [pprint]]
             [no-sports.util :refer [pipe tap]]
             [no-sports.data :refer [load-data load-edn]]
-            #_[no-sports.neural :refer [trained-net]]
             [no-sports.bayes :refer [classify-pred]]
             [no-sports.twitter :refer [listen!
                                        retweet retweet?
@@ -21,14 +20,6 @@
 (def sport?
   (-> (load-data "training.csv")
       (classify-pred :y)))
-
-#_(defonce sport?
-  (let [{:keys [promise pred]}
-        (trained-net (load-data "training.csv"))]
-    (println "Training neural net...")
-    (deref promise)
-    (println "Done.")
-    pred))
 
 (def rt-xform
   (comp (filter tweet?)

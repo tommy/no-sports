@@ -85,11 +85,14 @@
   (let [ch (chan buffer)
         write (comp #(>!! ch %) str second vector)
         ex-handler (fn [_ throwable]
+                     (println "Exception handler triggered.")
                      (println throwable)
                      (close! ch))
-        callback (AsyncStreamingCallback. write
-                                          (comp println handlers/response-return-everything)
-                                          ex-handler)
+        failure-handler (fn [response]
+                          (println "Failure handler triggered.")
+                          (println response)
+                          (close! ch))
+        callback (AsyncStreamingCallback. write failure-handler ex-handler)
         stream (user-stream :oauth-creds creds :callbacks callback)
 
         cancel #(do ((:cancel (meta stream)))

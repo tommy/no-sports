@@ -78,7 +78,7 @@
 (defn tap
   "Create a transducer that prints the values of the supplied keys
   but does not transform the input.
-  
+
   (tap \"Got tweet with id %d and body %s\" :id [:body :text])"
   [fmt & ks]
   (fn [xf]

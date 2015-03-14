@@ -4,7 +4,9 @@
             [clojure.java.io :as io]
             [clojure.tools.reader.edn :as edn]
             [clojure.data :refer [diff]]
-            [no-sports.core :refer :all]))
+            [clojure.core.async :refer [chan <!! >!! close! alt!! go >! <!]]
+            [no-sports.core :refer :all]
+            [no-sports.util :refer [pipe]]))
 
 (def ^:private sample-stream
   (-> "simulated-stream.edn" io/resource slurp edn/read-string))
@@ -26,3 +28,14 @@
     (when (seq false-pos)
       (is false (format "These SHOULD NOT have been tweeted:%n%s"
                         (with-out-str (pprint false-pos)))))))
+
+(deftest test-reconnect
+  (testing "pipe closes when tweet channel closes"
+    (dont-print
+      (let [tweet (first (sequence rt-xform sample-stream))
+            in (chan 5)
+            out (pipe in 20 rt-xform)]
+        (>!! in tweet)
+        (is (not= :nothing (alt!! out ([v] v) :default :nothing)))
+        (close! in)
+        (is (nil? (<!! out)))))))
