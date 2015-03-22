@@ -31,6 +31,7 @@
         (remove (comp sport? :text))
         (tap "Is not about sports.")))
 
+(def timeout 43200000) ; 12 hours
 (defn -main
   "Listens to the @NoSportsAJ user stream and retweets any tweets that match
   the above transducer.
@@ -39,7 +40,7 @@
   Blocks the current thread."
   []
   (verify sport?)
-  (let [connect #(pipe (listen! :timeout nil) 20 rt-xform)]
+  (let [connect #(pipe (listen! :timeout timeout) 20 rt-xform)]
     (info "Connecting to stream...")
     (loop [stream (connect)]
       (if-let [v (<!! stream)]
