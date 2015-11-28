@@ -3,7 +3,7 @@
 (defn backoff
   "Construct data object to track backoff."
   [min-wait max-wait decay-time
-   & {:keys [timestamp power]
+   & {:keys [timestamp]
       :or {timestamp (System/currentTimeMillis)}}]
   {:min-wait min-wait
    :max-wait max-wait

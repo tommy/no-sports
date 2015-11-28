@@ -1,10 +1,11 @@
 (ns no-sports.core
-  (:require [clojure.core.async :as async :refer [<! <!! go go-loop chan]]
-            [clojure.tools.logging :refer [info infof warn error]]
+  (:require [clojure.core.async :as async :refer [<! <!! go go-loop chan timeout]]
+            [clojure.tools.logging :refer [info infof warnf error]]
             [clojure.pprint :refer [pprint]]
             [no-sports.util :refer [pipe tap]]
             [no-sports.data :refer [load-data load-edn]]
             [no-sports.bayes :refer [classify-pred]]
+            [no-sports.backoff :refer [backoff split]]
             [no-sports.twitter :refer [listen!
                                        retweet retweet?
                                        tweet? tweeter=]])
@@ -31,7 +32,7 @@
         (remove (comp sport? :text))
         (tap "Is not about sports.")))
 
-(def timeout 43200000) ; 12 hours
+(def reconnect-interval (* 12 60 60 1000)) ; always reconnect every 12 hours
 (defn -main
   "Listens to the @NoSportsAJ user stream and retweets any tweets that match
   the above transducer.
@@ -40,12 +41,17 @@
   Blocks the current thread."
   []
   (verify sport?)
-  (let [connect #(pipe (listen! :timeout timeout) 20 rt-xform)]
+  (let [connect #(pipe (listen! :timeout reconnect-interval) 20 rt-xform)]
     (info "Connecting to stream...")
-    (loop [stream (connect)]
+    (loop [stream (connect)
+           ;; for each reconnect, wait a minimum of 1 second, a maximum of 10 minutes,
+           ;; and reset the timer after staying connected for 2 hours.
+           delay-timer (backoff 1000 (* 10 60 1000) (* 2 60 60 1000))]
       (if-let [v (<!! stream)]
         (do (infof "Retweeting: %s" (:text v))
             (retweet v)
-            (recur stream))
-        (do (warn "Lost connection!!!")
-            (recur (connect)))))))
+            (recur stream delay-timer))
+        (let [[wait new-delay-timer] (split delay-timer)]
+          (warnf "Lost connection!!! Reconnecting in %d ms" wait)
+          (<!! (timeout wait))
+          (recur (connect) new-delay-timer))))))
