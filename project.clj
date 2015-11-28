@@ -1,4 +1,4 @@
-(defproject no-sports "0.1.0-SNAPSHOT"
+(defproject no-sports "0.1.1-SNAPSHOT"
   :description "Bot that retweets @lubbockonline articles that don't have to do with sports."
   :url "http://twitter.com/NoSportsAJ"
   :license {:name "Eclipse Public License"
