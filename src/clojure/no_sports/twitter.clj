@@ -11,9 +11,10 @@
             [twitter.api.restful :refer [users-show
                                          statuses-user-timeline
                                          statuses-retweet-id]]
-            [twitter.api.streaming :refer [user-stream]]
-            [twitter.callbacks.handlers :as handlers])
+            [twitter.callbacks.handlers :as handlers]
+            [no-sports.fix-streaming :as fix])
   (:import twitter.callbacks.protocols.AsyncStreamingCallback))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; OAuth and Cred management
@@ -93,7 +94,7 @@
                           (error response)
                           (close! ch))
         callback (AsyncStreamingCallback. write failure-handler ex-handler)
-        stream (user-stream :oauth-creds creds :callbacks callback)
+        stream (fix/user-stream :oauth-creds creds :callbacks callback)
 
         cancel #(do ((:cancel (meta stream)))
                     (close! ch))

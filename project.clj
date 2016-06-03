@@ -12,7 +12,7 @@
                                                     javax.jms/jms
                                                     com.sun.jmdk/jmxtools
                                                     com.sun.jmx/jmxri]]
-                 [twitter-api "0.7.7"]
+                 [twitter-api "0.7.8"]
                  [clj-oauth "1.5.1"]
                  [org.clojure/data.csv "0.1.2"]
                  [cheshire "5.3.1"]
