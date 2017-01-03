@@ -2,7 +2,7 @@
   (:require [clojure.core.async :as async :refer [<! <!! go go-loop chan timeout]]
             [clojure.tools.logging :refer [info infof warnf error]]
             [clojure.pprint :refer [pprint]]
-            [no-sports.util :refer [pipe tap]]
+            [no-sports.util :refer [pipe tap report]]
             [no-sports.data :refer [load-data load-edn]]
             [no-sports.bayes :refer [classify-pred]]
             [no-sports.backoff :refer [backoff split]]
@@ -24,7 +24,8 @@
       (classify-pred :y)))
 
 (def rt-xform
-  (comp (filter tweet?)
+  (comp (report "https://nosnch.in/596c61db7e")
+        (filter tweet?)
         (tap "Got a tweet: %s" :text)
         (remove retweet?)
         (filter (tweeter= "lubbockonline"))

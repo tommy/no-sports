@@ -1,9 +1,10 @@
 (ns no-sports.util
   (:require [clojure.string :as s]
             [clojure.core.async :as async :refer [<! >! go-loop chan close!]]
-            [clojure.tools.logging :refer [info debugf debug]]
+            [clojure.tools.logging :refer [info infof debugf debug]]
             [cheshire.core :as json]
-            [clj-tokenizer.core :as tok])
+            [clj-tokenizer.core :as tok]
+            [clj-http.client :as http])
   (:import com.fasterxml.jackson.core.JsonParseException))
 
 ;; collection utils
@@ -78,6 +79,17 @@
       ([result] (xf result))
       ([result input]
        (info (apply format fmt (select input ks)))
+       (xf result input)))))
+
+(defn report
+  [url]
+  (fn [xf]
+    (fn
+      ([] (xf))
+      ([result] (xf result))
+      ([result input]
+       (http/get url)
+       (infof "Reported to %s" url)
        (xf result input)))))
 
 (def whitespace-filter
