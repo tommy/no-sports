@@ -116,8 +116,11 @@
 
 (defn retweet-id
   [id]
-  (statuses-retweet-id :oauth-creds creds
-                       :params {:id id}))
+  (try
+    (statuses-retweet-id :oauth-creds creds
+                         :params {:id id})
+    (catch Exception e
+      (error e "Exception when retweeting."))))
 
 (def retweet (comp retweet-id :id))
 
