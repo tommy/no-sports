@@ -2,7 +2,7 @@
   "Namespace containing twitter operations."
   (:require [clojure.pprint :refer [pprint]])
   (:require [no-sports.util :refer [parse-json]]
-            [clojure.tools.reader.edn :as edn]
+            [clojure.edn :as edn]
             [clojure.tools.logging :refer [info error]]
             [clojure.core.async :as async :refer [go <! >!! chan close!]]
             [cheshire.core :as json]

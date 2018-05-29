@@ -1,6 +1,6 @@
 (ns no-sports.data
   (:require [no-sports.util :refer [tokenize]]
-            [clojure.tools.reader.edn :as edn]
+            [clojure.edn :as edn]
             [clojure.string :as s]
             [clojure.data.csv :as csv]
             [clojure.java.io :as io]))

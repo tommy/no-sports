@@ -1,8 +1,8 @@
 (ns no-sports.core-test
   (:require [clojure.test :refer :all]
+            [clojure.edn :as edn]
             [clojure.pprint :refer [pprint]]
             [clojure.java.io :as io]
-            [clojure.tools.reader.edn :as edn]
             [clojure.tools.logging :refer [*logger-factory*]]
             [clojure.tools.logging.impl :refer [disabled-logger-factory]]
             [clojure.data :refer [diff]]

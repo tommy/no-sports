@@ -4,7 +4,7 @@
             [no-sports.util :refer [pipe]]
             [clojure.core.async :refer [<! <!! go-loop]]
             [clojure.java.io :as io]
-            [clojure.tools.reader.edn :as edn])
+            [clojure.edn :as edn])
   (:import java.io.PushbackReader))
 
 (defn- swallow-eof
@@ -39,7 +39,7 @@
 (comment
   (record "resources/recorded.edn")
   (def s (edn-seq "recorded.edn"))
-  (def ts (clojure.tools.reader.edn/read-string (slurp "resources/lubbockonline.edn")))
+  (def ts (clojure.edn/read-string (slurp "resources/lubbockonline.edn")))
   (def as (sort-by :id (into (vec s) ts)))
   (spit "resources/simulated-stream.edn"
         (with-out-str (clojure.pprint/pprint as)))
