@@ -1,12 +1,12 @@
 (ns no-sports.util-test
-  (:require [no-sports.util :refer :all]
+  (:require [no-sports.util :as u]
             [clojure.test :refer :all]
             [clojure.core.async :refer [chan <!! >!! close!]]))
 
 (deftest parse-json-test
   (testing "can parse channel of partial json messages"
     (let [source (chan)
-          json (parse-json source)]
+          json (u/parse-json source)]
       (>!! source "{\"a\":1}")
       (is (= {:a 1} (<!! json)))
 
@@ -19,23 +19,23 @@
 
   (testing "output channel closes if source closes"
     (let [source (chan)
-          json (parse-json source)]
+          json (u/parse-json source)]
       (>!! source "{\"b\"")
 
       (close! source)
       (is (nil? (<!! json))))))
 
 (deftest remove-newlines-test
-  (is (= "1 2" (remove-newlines "1\n2"))))
+  (is (= "1 2" (u/remove-newlines "1\n2"))))
 
 (deftest remove-urls-test
-  (is (= "hey  there" (remove-urls "hey http://google.com there")))
-  (is (= "hey  there" (remove-urls "hey https://google.com there"))))
+  (is (= "hey  there" (u/remove-urls "hey http://google.com there")))
+  (is (= "hey  there" (u/remove-urls "hey https://google.com there"))))
 
 (deftest escaped-test
-  (is (= "hey\\nthere" (escaped "hey\nthere"))))
+  (is (= "hey\\nthere" (u/escaped "hey\nthere"))))
 
 (deftest whitespace-test
-  (is (whitespace? "\r\n"))
-  (is (not (whitespace? "f\n")))
-  (is (not (whitespace? "\na"))))
+  (is (u/whitespace? "\r\n"))
+  (is (not (u/whitespace? "f\n")))
+  (is (not (u/whitespace? "\na"))))
