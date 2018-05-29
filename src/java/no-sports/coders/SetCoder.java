@@ -29,6 +29,7 @@ public class SetCoder<T> extends AbstractCoder<Collection<T>> {
 		}
 	}
 	
+	@SafeVarargs
 	public SetCoder(T... values) {
 		this(Arrays.asList(values));
 	}
