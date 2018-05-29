@@ -25,8 +25,10 @@
 
   :main no-sports.core
 
-  :profiles {:uberjar {:aot :all}}
-  :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:unchecked"]
+  :javac-options ["-target" "1.8" "-source" "1.8" "-Xlint:unchecked"]
 
   :source-paths ["src/clojure"]
-  :java-source-paths ["src/java"])
+  :java-source-paths ["src/java"]
+
+  :profiles {:uberjar {:aot :all}
+             :dev {:dependencies [[clj-http-fake "1.0.3"]]}})

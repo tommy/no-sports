@@ -7,8 +7,11 @@
             [clojure.tools.logging.impl :refer [disabled-logger-factory]]
             [clojure.data :refer [diff]]
             [clojure.core.async :refer [chan <!! >!! close! alt!! go >! <!]]
+            [no-sports.test.util :as tu]
             [no-sports.core :refer :all]
             [no-sports.util :refer [pipe]]))
+
+(use-fixtures :once tu/mocks-fixture)
 
 (def ^:private sample-stream
   (-> "simulated-stream.edn" io/resource slurp edn/read-string))
