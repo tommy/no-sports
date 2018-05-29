@@ -5,17 +5,14 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.7.0-alpha1"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
-                 [org.clojure/tools.logging "0.3.1"]
-                 [org.slf4j/slf4j-log4j12 "1.6.6"]
-                 [log4j/log4j "1.2.17" :exclusions [javax.mail/mail
-                                                    javax.jms/jms
-                                                    com.sun.jmdk/jmxtools
-                                                    com.sun.jmx/jmxri]]
-                 [clj-http "0.9.1"]
+                 [org.clojure/tools.logging "0.4.1"]
+                 [org.slf4j/slf4j-log4j12 "1.7.25"]
+                 [org.apache.logging.log4j/log4j-core "2.11.0"]
+                 [clj-http "3.9.0"]
                  [twitter-api "0.7.8"]
                  [clj-oauth "1.5.1"]
-                 [org.clojure/data.csv "0.1.2"]
-                 [cheshire "5.3.1"]
+                 [org.clojure/data.csv "0.1.4"]
+                 [cheshire "5.8.0"]
                  [clj-tokenizer "0.1.0"]
                  [com.nuroko/nurokit "0.0.3"]
                  [com.nuroko/nurokore "0.0.6"]
