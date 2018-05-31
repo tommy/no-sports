@@ -8,11 +8,11 @@
             [cheshire.core :as json]
             [oauth.client :as oauth]
             [twitter.oauth :refer [make-oauth-creds]]
+            [twitter.api.streaming :refer [user-stream]]
             [twitter.api.restful :refer [users-show
                                          statuses-user-timeline
                                          statuses-retweet-id]]
-            [twitter.callbacks.handlers :as handlers]
-            [no-sports.fix-streaming :as fix])
+            [twitter.callbacks.handlers :as handlers])
   (:import twitter.callbacks.protocols.AsyncStreamingCallback))
 
 
@@ -94,7 +94,7 @@
                           (error response)
                           (close! ch))
         callback (AsyncStreamingCallback. write failure-handler ex-handler)
-        stream (fix/user-stream :oauth-creds creds :callbacks callback)
+        stream (user-stream :oauth-creds creds :callbacks callback)
 
         cancel #(do ((:cancel (meta stream)))
                     (close! ch))
