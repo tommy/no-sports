@@ -1,11 +1,10 @@
 (ns no-sports.util
   (:require [clojure.string :as s]
-            [clojure.core.async :as async :refer [<! >! go-loop chan close!]]
+            [clojure.core.async :as async :refer [<! >! chan]]
             [clojure.tools.logging :refer [info infof debugf debug]]
-            [cheshire.core :as json]
             [clj-tokenizer.core :as tok]
-            [clj-http.client :as http])
-  (:import com.fasterxml.jackson.core.JsonParseException))
+            [clj-http.client :as http]))
+
 
 ;; collection utils
 
@@ -15,16 +14,6 @@
   (->> m
        (map #(vector (f (key %)) (val %)))
        (into {})))
-
-(defn- gets
-  [m k]
-  (if (coll? k)
-    (get-in m k)
-    (get m k)))
-
-(defn- select
-  [m ks]
-  (map (partial gets m) ks))
 
 
 ;; string utils
@@ -48,22 +37,6 @@
          remove-newlines)
    s))
 
-(defn maybe-parse
-  "Tries to parse a string as JSON. Returns nil instead of throwing an
-  exception if the string is not valid JSON."
-  [s]
-  (try
-    (json/parse-string s true)
-    (catch JsonParseException e
-      (debugf "Couldn't parse JSON: %s" (.getMessage e)))))
-
-(defn escaped
-  [s]
-  (let [f #(if-let [c (char-escape-string %)] c %)]
-    (reduce str (map f s))))
-
-(def whitespace?
-  (partial re-matches #"\s*"))
 
 ;; channel
 
@@ -96,10 +69,6 @@
        (infof "Reported to %s" url)
        (xf result input)))))
 
-(def whitespace-filter
-  (comp (tap "tick")
-        (remove whitespace?)))
-
 (defn pipe
   "Create a return a new channel that will receive all messages
   from the from channel but allows specifying a transformer.
@@ -110,22 +79,3 @@
   (let [to (apply chan opts)]
     (async/pipe from to)
     to))
-
-(defn parse-json
-  "Read (possibly partial) JSON strings from a channel and emit the parsed data
-  structures to a returned channel."
-  [in]
-  (let [out (chan)
-        in (pipe in 10 whitespace-filter)]
-    (go-loop [acc ""]
-      (if-let [v (<! in)]
-        (do
-          (debug (format "Got a piece of json: '%s'" (escaped v)))
-          (debug (format "Accumulator holds: '%s'" (escaped acc)))
-
-          (if-let [parsed (maybe-parse (str acc v))]
-            (do (>! out parsed)
-                (recur ""))
-            (recur (str acc v))))
-        (close! out)))
-    out))

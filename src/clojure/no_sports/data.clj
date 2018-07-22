@@ -47,16 +47,3 @@
 (defn load-edn
   [n]
   (-> n io/resource slurp edn/read-string))
-
-;;;;;;;;;;;
-;; repl dev
-
-(comment
-  (def t (mapv vec (load-dataset "grading.csv")))
-  (def tt (mapv #(vector (get % 0) (get % 1) (get % 4) (get % 3)) t))
-  (with-open [out-file (io/writer "resources/third.new.csv")]
-    (csv/write-csv out-file
-                   tt
-                   :quote? (constantly true)))
-
-  (def tr (load-data "training.csv")))
