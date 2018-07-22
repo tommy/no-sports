@@ -1,7 +1,7 @@
 (ns no-sports.core
   (:require
-    [clojure.core.async :as async :refer [<! <!! go go-loop chan timeout]]
-    [clojure.tools.logging :refer [info infof warnf error]]
+    [clojure.core.async :as async :refer [<!!]]
+    [clojure.tools.logging :as log]
     [clojure.pprint :refer [pprint]]
     [no-sports.util :refer [pipe tap report]]
     [no-sports.data :refer [load-data load-edn]]
@@ -15,7 +15,7 @@
   (let [failures (remove #(= (second %) (pred (first %)))
                          (load-edn "verification.edn"))]
     (when (seq failures)
-      (error "Failed verification for following tweets:")
+      (log/error "Failed verification for following tweets:")
       (pprint failures))))
 
 (def sport?
@@ -25,6 +25,7 @@
 (def rt-xform
   (comp (report "https://nosnch.in/596c61db7e")
         (tap "Got a tweet: %s" [text])
+        (remove (comp nil? text))
         (remove (comp sport? text))
         (tap "Is not about sports.")))
 
@@ -35,10 +36,10 @@
   (verify sport?)
   (let [{:keys [tweets cancel]} (listen! "lubbockonline")
         stream (pipe tweets 20 rt-xform)]
-    (info "Polling Twitter.")
+    (log/info "Polling Twitter.")
     (loop []
       (if-let [v (<!! stream)]
-        (do (infof "Retweeting: %s" (text v))
+        (do (log/infof "Retweeting: %s" (text v))
             (retweet v)
             (recur))
-        (error "Tweet channel was closed! Exiting.")))))
+        (log/error "Tweet channel was closed! Exiting.")))))

@@ -1,6 +1,7 @@
 (ns no-sports.backoff-test
-  (:require [clojure.test :refer :all]
-            [no-sports.backoff :refer :all]))
+  (:require
+    [clojure.test :refer :all]
+    [no-sports.backoff :refer :all]))
 
 (deftest backoff-test
   (testing "generate several backoff values"

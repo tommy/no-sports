@@ -1,13 +1,18 @@
 (ns no-sports.neural
   "This namespace trains a neural net classification model."
-  (:require [no-sports.data :refer [load-data all-tokens]]
-            [no-sports.util :refer [tokenize mapk]]
-            [task.core :as t]
-            [nuroko.lab.core :as nk]
-            [nuroko.gui.visual :as nkv])
-  (:import [no_sports.coders.SetCoder])
-  (:import nuroko.module.NeuralNet)
-  (:import [mikera.vectorz Op Ops]))
+  (:require
+    [no-sports.data :refer [load-data all-tokens]]
+    [no-sports.util :refer [tokenize mapk]]
+    [task.core :as t]
+    [nuroko.lab.core :as nk]
+    [nuroko.gui.visual :as nkv])
+  (:import
+    (no_sports.coders
+      SetCoder)
+    (nuroko.module
+      NeuralNet)
+    (mikera.vectorz
+      Ops)))
 
 (defn- token-set-coder
   "Creates a coder that encodes/decodes sets of tokens. Only tokens that appear
@@ -36,9 +41,9 @@
 (defn- evaluate
   "Evaluate the performance of a trained net against a particular
   dataset."
-  [net coder dataset]
+  [^NeuralNet net coder dataset]
   {:pre [(map? dataset)]}
-  (let [net (.clone ^NeuralNet net)
+  (let [net (.clone net)
         correct (for [[tokens grade] dataset
                       :when (= grade (run net coder tokens))] grade)]
     (/ (count correct)
@@ -92,6 +97,7 @@
     (nkv/show
       (nkv/time-chart fns :y-max 1)
       :title "% correct classifications")))
+
 
 ;;;;;;;;;;;
 ;; for repl

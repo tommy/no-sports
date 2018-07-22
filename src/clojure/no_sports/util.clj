@@ -1,9 +1,10 @@
 (ns no-sports.util
-  (:require [clojure.string :as s]
-            [clojure.core.async :as async :refer [<! >! chan]]
-            [clojure.tools.logging :refer [info infof debugf debug]]
-            [clj-tokenizer.core :as tok]
-            [clj-http.client :as http]))
+  (:require
+    [clojure.tools.logging :as log]
+    [clojure.string :as s]
+    [clojure.core.async :as async]
+    [clj-tokenizer.core :as tok]
+    [clj-http.client :as http]))
 
 
 ;; collection utils
@@ -29,13 +30,13 @@
 (defn tokenize
   [s]
   {:pre [(string? s)]}
-  ((comp set
-         tok/token-seq
-         tok/stemmed
-         tok/token-stream-without-stopwords
-         remove-urls
-         remove-newlines)
-   s))
+  (-> s
+      (remove-newlines)
+      (remove-urls)
+      (tok/token-stream-without-stopwords)
+      (tok/stemmed)
+      (tok/token-seq)
+      (set)))
 
 
 ;; channel
@@ -54,8 +55,8 @@
        ([result] (xf result))
        ([result input]
         (if (seq fs)
-          (info (apply format fmt ((apply juxt fs) input)))
-          (info fmt))
+          (log/info (apply format fmt ((apply juxt fs) input)))
+          (log/info fmt))
         (xf result input))))))
 
 (defn report
@@ -66,7 +67,7 @@
       ([result] (xf result))
       ([result input]
        (http/get url)
-       (infof "Reported to %s" url)
+       (log/infof "Reported to %s" url)
        (xf result input)))))
 
 (defn pipe
@@ -76,6 +77,6 @@
   Example:
   (pipe (listen!) 10 (filter retweet?))"
   [from & opts]
-  (let [to (apply chan opts)]
+  (let [to (apply async/chan opts)]
     (async/pipe from to)
     to))

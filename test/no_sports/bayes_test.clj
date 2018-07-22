@@ -1,8 +1,9 @@
 (ns no-sports.bayes-test
-  (:require [clojure.test :refer :all]
-            [no-sports.bayes :refer :all]
-            [no-sports.data :refer :all]
-            [judgr.cross-validation :refer [k-fold-crossval]]))
+  (:require
+    [clojure.test :refer :all]
+    [judgr.cross-validation :as judgr]
+    [no-sports.bayes :refer :all]
+    [no-sports.data :refer :all]))
 
 (def training-data (load-data "training.csv"))
 
@@ -11,7 +12,7 @@
 
 (deftest model-quality
   (let [c (classifier training-data)
-        qual (k-fold-crossval 5 c)
+        qual (judgr/k-fold-crossval 5 c)
         total-n (total (:n qual))]
 
     (testing "model quality"

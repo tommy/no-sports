@@ -1,9 +1,9 @@
 (ns no-sports.data
-  (:require [no-sports.util :refer [tokenize]]
-            [clojure.edn :as edn]
-            [clojure.string :as s]
-            [clojure.data.csv :as csv]
-            [clojure.java.io :as io]))
+  (:require
+    [clojure.edn :as edn]
+    [clojure.data.csv :as csv]
+    [clojure.java.io :as io]
+    [no-sports.util :as u]))
 
 (let [indices (zipmap [:id :grade :text :url] (range))]
   (defn- el
@@ -19,7 +19,7 @@
   ([dataset]
    {:pre [(and (map? dataset) (string? (key (first dataset))))]}
    (reduce
-     (fn [acc text] (into acc (tokenize text)))
+     (fn [acc text] (into acc (u/tokenize text)))
      (sorted-set)
      (keys dataset))))
 

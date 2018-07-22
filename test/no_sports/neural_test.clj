@@ -1,10 +1,11 @@
 (ns no-sports.neural-test
-  (:require [clojure.test :refer :all]
-            [no-sports.neural :refer :all]
-            [no-sports.data :refer :all]))
+  (:require
+    [clojure.test :refer :all]
+    [no-sports.data :as data]
+    [no-sports.neural :refer :all]))
 
-(def training-data (load-data "training.csv"))
-(def grading-data (load-data "grading.csv"))
+(def training-data (data/load-data "training.csv"))
+(def grading-data (data/load-data "grading.csv"))
 
 (deftest model-quality
   (let [{:keys [net coder promise pred eval-fn]}

@@ -1,6 +1,7 @@
 (ns no-sports.util-test
-  (:require [no-sports.util :as u]
-            [clojure.test :refer :all]))
+  (:require
+    [clojure.test :refer :all]
+    [no-sports.util :as u]))
 
 (deftest remove-newlines-test
   (is (= "1 2" (u/remove-newlines "1\n2"))))

@@ -1,12 +1,12 @@
 (ns no-sports.export
-  "Contains functions for exporting a timeline to csv
-  so it may be graded and used to train a classifier."
-  (:require [clojure.data.csv :as csv]
-            [clojure.java.io :as io]
-            [clojure.string :refer [join]]
-            [clojure.pprint :refer [pprint]]
-            [no-sports.twitter :as twitter]
-            [no-sports.util :refer [remove-newlines]]))
+  "Contains functions for exporting a timeline to csv so it may be graded and
+  used to train a classifier."
+  (:require
+    [clojure.data.csv :as csv]
+    [clojure.java.io :as io]
+    [clojure.pprint :refer [pprint]]
+    [no-sports.twitter :as twitter]
+    [no-sports.util :as u]))
 
 (defn export-csv
   "Export tweets to a csv for manual grading and use in model training."
@@ -17,7 +17,7 @@
         header-line ["id" "grade" "text" "url"]
         line-fn (juxt :id
                       (constantly "")
-                      (comp remove-newlines twitter/text)
+                      (comp u/remove-newlines twitter/text)
                       (comp :expanded_url first :urls :entities))]
     (with-open [out-file (io/writer out-file)]
       (csv/write-csv out-file

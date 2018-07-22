@@ -1,15 +1,14 @@
 (ns no-sports.core-test
-  (:require [clojure.test :refer :all]
-            [clojure.edn :as edn]
-            [clojure.pprint :refer [pprint]]
-            [clojure.java.io :as io]
-            [clojure.tools.logging :refer [*logger-factory*]]
-            [clojure.tools.logging.impl :refer [disabled-logger-factory]]
-            [clojure.data :refer [diff]]
-            [clojure.core.async :refer [chan <!! >!! close! alt!! go >! <!]]
-            [no-sports.test.util :as tu]
-            [no-sports.core :refer :all]
-            [no-sports.util :refer [pipe]]))
+  (:require
+    [clojure.test :refer :all]
+    [clojure.edn :as edn]
+    [clojure.pprint :refer [pprint]]
+    [clojure.java.io :as io]
+    [clojure.tools.logging :as log]
+    [clojure.tools.logging.impl :as log.impl]
+    [clojure.data :refer [diff]]
+    [no-sports.test.util :as tu]
+    [no-sports.core :as core]))
 
 (use-fixtures :once tu/mocks-fixture)
 
@@ -22,11 +21,12 @@
 (defmacro dont-print
   [& body]
   `(binding [*out* (io/writer "/dev/null")
-             *logger-factory* disabled-logger-factory]
+             log/*logger-factory* log.impl/disabled-logger-factory]
      ~@body))
 
 (deftest test-xform
-  (let [actual-rt (dont-print (doall (sequence rt-xform sample-stream)))
+  ;; TODO: test data broken
+  (let [actual-rt (dont-print (doall (sequence core/rt-xform sample-stream)))
         [false-neg false-pos _] (diff expected-rt (set (map :text actual-rt)))]
     (when (seq false-neg)
       (is false (format "These SHOULD have been tweeted:%n%s"
@@ -34,14 +34,3 @@
     (when (seq false-pos)
       (is false (format "These SHOULD NOT have been tweeted:%n%s"
                         (with-out-str (pprint false-pos)))))))
-
-(deftest test-reconnect
-  (testing "pipe closes when tweet channel closes"
-    (dont-print
-      (let [tweet (first (sequence rt-xform sample-stream))
-            in (chan 5)
-            out (pipe in 20 rt-xform)]
-        (>!! in tweet)
-        (is (not= :nothing (alt!! out ([v] v) :default :nothing)))
-        (close! in)
-        (is (nil? (<!! out)))))))
