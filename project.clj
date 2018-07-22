@@ -9,7 +9,6 @@
                  [org.slf4j/slf4j-log4j12 "1.7.25"]
                  [org.apache.logging.log4j/log4j-core "2.11.0"]
                  [clj-http "3.9.0"]
-                 [twitter-api "1.8.0"]
                  [clj-oauth "1.5.5"]
                  [org.clojure/data.csv "0.1.4"]
                  [cheshire "5.8.0"]
