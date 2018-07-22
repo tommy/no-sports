@@ -5,28 +5,29 @@
             [clojure.java.io :as io]
             [clojure.string :refer [join]]
             [clojure.pprint :refer [pprint]]
-            [no-sports.twitter :refer :all]
+            [no-sports.new-twitter :as twitter]
             [no-sports.util :refer [remove-newlines]]))
 
 (defn export-csv
   "Export tweets to a csv for manual grading and use in model training."
-  [& {:keys [out-file page-size max-id]
-      :or {out-file "resources/lubbockonline.csv"
-           page-size 101}}]
-  (let [tweets (timeline 200 {:count page-size})
+  [n & {:keys [out-file screen-name]
+        :or {out-file "resources/lubbockonline.csv"
+             screen-name "lubbockonline"}}]
+  (let [tweets (twitter/user-timeline n {:screen_name screen-name})
+        header-line ["id" "grade" "text" "url"]
         line-fn (juxt :id
                       (constantly "")
-                      (comp remove-newlines :text)
+                      (comp remove-newlines twitter/text)
                       (comp :expanded_url first :urls :entities))]
     (with-open [out-file (io/writer out-file)]
       (csv/write-csv out-file
-                     (map line-fn tweets)
+                     (concat [header-line] (map line-fn tweets))
                      :quote? (constantly true)))))
 
 (defn export-edn
   "Export tweet objects from a user timeline to a file."
-  [n & {:keys [out-file page-size max-id]
+  [n & {:keys [out-file screen-name]
         :or {out-file "resources/lubbockonline.edn"
-             page-size (min n 101)}}]
-  (let [tweets (timeline n {:count page-size})]
+             screen-name "lubbockonline"}}]
+  (let [tweets (twitter/user-timeline n {:screen_name screen-name})]
     (spit out-file (with-out-str (pprint tweets)))))

@@ -59,19 +59,18 @@
         (:body))))
 
 (defn user-timeline
-  [params pages]
+  "Returns the latest n tweets from the user_timeline given by the parameters."
+  [n params]
   (loop [tweets []
-         max-id nil
-         n pages]
+         max-id (:max-id params)]
     (let [page (user-timeline* (if max-id
                                  (assoc params :max_id max-id)
                                  params))]
-      (if (or (= n 1)
+      (if (or (<= n (count tweets))
               (empty? page))
-        (into tweets page)
+        (take n (into tweets page))
         (recur (into tweets page)
-               (:id (last page))
-               (dec n))))))
+               (:id (last page)))))))
 
 
 ;; Streaming
