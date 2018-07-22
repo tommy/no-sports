@@ -72,14 +72,18 @@
   but does not transform the input.
 
   (tap \"Got tweet with id %d and body %s\" :id [:body :text])"
-  [fmt & ks]
-  (fn [xf]
-    (fn
-      ([] (xf))
-      ([result] (xf result))
-      ([result input]
-       (info (apply format fmt (select input ks)))
-       (xf result input)))))
+  ([message]
+   (tap message nil))
+  ([fmt fs]
+   (fn [xf]
+     (fn
+       ([] (xf))
+       ([result] (xf result))
+       ([result input]
+        (if (seq fs)
+          (info (apply format fmt ((apply juxt fs) input)))
+          (info fmt))
+        (xf result input))))))
 
 (defn report
   [url]
