@@ -5,7 +5,7 @@
             [clojure.java.io :as io]
             [clojure.string :refer [join]]
             [clojure.pprint :refer [pprint]]
-            [no-sports.new-twitter :as twitter]
+            [no-sports.twitter :as twitter]
             [no-sports.util :refer [remove-newlines]]))
 
 (defn export-csv

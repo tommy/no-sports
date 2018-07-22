@@ -1,4 +1,4 @@
-(ns no-sports.new-twitter
+(ns no-sports.twitter
   (:require
     [clojure.tools.logging :as log]
     [clojure.edn :as edn]

@@ -7,7 +7,7 @@
     [no-sports.data :refer [load-data load-edn]]
     [no-sports.bayes :refer [classify-pred]]
     [no-sports.backoff :refer [backoff split]]
-    [no-sports.new-twitter :refer [listen! text retweet]])
+    [no-sports.twitter :refer [listen! text retweet]])
   (:gen-class))
 
 (defn verify
