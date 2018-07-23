@@ -40,6 +40,6 @@
     (loop []
       (if-let [v (<!! stream)]
         (do (log/infof "Retweeting: %s" (text v))
-            (retweet v)
+            (retweet (:id v))
             (recur))
         (log/error "Tweet channel was closed! Exiting.")))))
