@@ -21,16 +21,18 @@
 
 (defn remove-urls
   [text]
+  {:pre [(string? text)]}
   (s/replace text #"https?://\S*" ""))
 
 (defn remove-newlines
   [text]
+  {:pre [(string? text)]}
   (s/replace text "\n" " "))
 
 (defn tokenize
-  [s]
-  {:pre [(string? s)]}
-  (-> s
+  [text]
+  {:pre [(string? text)]}
+  (-> text
       (remove-newlines)
       (remove-urls)
       (tok/token-stream-without-stopwords)
