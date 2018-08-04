@@ -6,7 +6,6 @@
     [no-sports.util :refer [pipe tap report]]
     [no-sports.data :refer [load-data load-edn]]
     [no-sports.bayes :refer [classify-pred]]
-    [no-sports.backoff :refer [backoff split]]
     [no-sports.twitter :refer [listen! text retweet]])
   (:gen-class))
 
