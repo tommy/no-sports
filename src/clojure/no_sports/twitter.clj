@@ -9,22 +9,27 @@
 
 ;; OAuth
 
-(def ^:private secrets (edn/read-string (slurp "secrets.edn")))
+(def ^:private secrets (delay (edn/read-string (slurp "secrets.edn"))))
 
 (def consumer
-  (oauth/make-consumer
-    (:app-consumer-key secrets)
-    (:app-consumer-secret secrets)
-    "https://api.twitter.com/oauth/request_token"
-    "https://api.twitter.com/oauth/access_token"
-    "https://api.twitter.com/oauth/authorize"
-    :hmac-sha1))
+  (delay
+    (oauth/make-consumer
+      (:app-consumer-key @secrets)
+      (:app-consumer-secret @secrets)
+      "https://api.twitter.com/oauth/request_token"
+      "https://api.twitter.com/oauth/access_token"
+      "https://api.twitter.com/oauth/authorize"
+      :hmac-sha1)))
 
-(def creds
-  (partial oauth/credentials
-           consumer
-           (get-in secrets [:nosportsaj :token])
-           (get-in secrets [:nosportsaj :secret])))
+(defn- creds
+  [method url query-params]
+  (oauth/credentials
+    @consumer
+    (get-in @secrets [:nosportsaj :token])
+    (get-in @secrets [:nosportsaj :secret])
+    method
+    url
+    query-params))
 
 (defn- oauth1-request
   [req]
