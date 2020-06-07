@@ -25,7 +25,8 @@
   :java-source-paths ["src/java"]
 
   :profiles
-  {:uberjar {:aot :all}
+  {:uberjar {:aot :all
+             :uberjar-name "no-sports.standalone.jar"}
    :dev {:dependencies [[clj-http-fake "1.0.3"]]}
    ;; profile that includes a neural net-based classifer
    :neural {:source-paths ["neural-src/main/clojure"]
